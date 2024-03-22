@@ -12,10 +12,13 @@
 $ git clone https://github.com/OmkarPh/redis-lite.git
 
 # Go into the server directory
-$ cd redis-lite/server/cmd
+$ cd redis-lite
 
 # Run the server
 $ go run .
+
+# Build executible
+$ go build -o build/redis-lite-server -v
 ```
 
 ## Supported redis-cli commands

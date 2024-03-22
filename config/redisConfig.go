@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"bufio"
@@ -17,9 +17,10 @@ func NewRedisConfig() *RedisConfig {
 	newConfig := RedisConfig{
 		Params: make(map[string]string),
 	}
-	if err := newConfig.ReadConfig("redis.conf"); err != nil {
-		newConfig.setDefaultConfig()
-	}
+	// Setup default config
+	newConfig.SetDefaultConfig()
+
+	newConfig.ReadConfig("redis.conf")
 
 	// // Print configuration parameters
 	// fmt.Println("Redis configuration parameters:")
@@ -34,8 +35,6 @@ func (rc *RedisConfig) ReadConfig(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Configuration file doesn't exist, create a new one
-			rc.setDefaultConfig()
 			return rc.WriteConfig(filename)
 		}
 		return err
@@ -77,11 +76,10 @@ func (rc *RedisConfig) WriteConfig(filename string) error {
 }
 
 // setDefaultConfig sets default Redis configuration parameters
-func (rc *RedisConfig) setDefaultConfig() {
+func (rc *RedisConfig) SetDefaultConfig() {
 	// Add more default configuration parameters as needed
 	rc.Params["port"] = "6379"
 	rc.Params["bind"] = "127.0.0.1"
-	rc.Params["timeout"] = "300"
 	rc.Params["loglevel"] = "notice"
 	rc.Params["databases"] = "16"
 	rc.Params["maxclients"] = "10000"
@@ -89,9 +87,11 @@ func (rc *RedisConfig) setDefaultConfig() {
 	rc.Params["maxmemory-policy"] = "volatile-lru"
 	rc.Params["save"] = "3600 1 300 100 60 10000"
 	rc.Params["appendonly"] = "no"
+	rc.Params["kv_engine"] = "sharded" // Options - "simple", "sharded"
+	rc.Params["shardfactor"] = "10"
 }
 
-func (rc *RedisConfig) getParam(key string) (string, bool) {
+func (rc *RedisConfig) GetParam(key string) (string, bool) {
 	key = strings.ToLower(key)
 	paramValue, found := rc.Params[key]
 	if !found {
@@ -99,6 +99,3 @@ func (rc *RedisConfig) getParam(key string) (string, bool) {
 	}
 	return paramValue, true
 }
-
-// Usage example
-var redisConfig = NewRedisConfig()
