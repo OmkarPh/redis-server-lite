@@ -12,13 +12,10 @@
 $ git clone https://github.com/OmkarPh/redis-lite.git
 
 # Go into the server directory
-$ cd redis-lite
+$ cd redis-lite/server/cmd
 
 # Run the server
 $ go run .
-
-# Build executible
-$ go build -o build/redis-lite-server -v
 ```
 
 ## Supported redis-cli commands
@@ -36,6 +33,3 @@ $ go build -o build/redis-lite-server -v
 | TYPE    	| TYPE key          	| redis-cli TYPE name           	|   	|
 | PING    	| PING              	| redis-cli PING               	|   	|
 | ECHO    	| ECHO <message>    	| redis-cli ECHO "Hello world" 	|   	|
-
-## redis-benchmarks 
-

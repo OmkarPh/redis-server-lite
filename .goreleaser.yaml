@@ -1,0 +1,57 @@
+project_name: redis-server-lite
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+# archives:
+#   - replacements:
+#       darwin: Darwin
+#       linux: Linux
+#       386: i386
+#       amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+brews:
+  - tap:
+      owner: OmkarPh
+      name: homebrew-tap
+    name: redis-server-lite-test
+    homepage: "https://github.com/OmkarPh/redis-server-lite"
+    description: "A lightweight Redis server implementation in Go."
+    folder: Formula
+    install: |
+      bin.install "redis-server-lite"
+    test: |
+      assert_match /A simple port-forward wrapper tool for multiple pods\/deployments\/services/, shell_output("#{bin}/kubepfm -h", 0)
+ 
+  
+# nfpms:
+# - maintainer: Omkar Phansopkar <omkarphansopkar@gmail.com>
+#   description: Redis Server Lite is a lightweight Redis server implementation in Go.
+#   homepage: https://github.com/OmkarPh/redis-server-lite
+#   license: Apache-2.0
+#   formats:
+#   - deb
+#   - rpm
+#   - apk
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+
+# Ref. https://flowerinthenight.com/blog/2023/04/13/homebrew-golang-p2

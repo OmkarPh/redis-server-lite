@@ -6,15 +6,15 @@ import (
 	"log/slog"
 
 	"github.com/OmkarPh/redis-lite/config"
-	"github.com/OmkarPh/redis-lite/engine"
 	"github.com/OmkarPh/redis-lite/resp"
+	"github.com/OmkarPh/redis-lite/store"
 )
 
 type EchoAction struct{}
 
-func (action *EchoAction) Execute(kvEngine *engine.KvEngine, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
+func (action *EchoAction) Execute(kvStore *store.KvStore, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
 	if len(args) != 1 {
-		errString := "ERR wrong number of arguments for 'echo' command"
+		errString := "ERR wrong number of arguments for 'ECHO' command"
 		return [][]byte{resp.ResolveResponse(errString, resp.Response_ERRORS)}, errors.New(errString)
 	}
 

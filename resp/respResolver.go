@@ -97,7 +97,11 @@ func integerResponseResolver(response interface{}) []byte {
 	case "string":
 		responseStr = response.(string)
 	case "int":
-		responseStr = strconv.FormatInt(response.(int64), 10)
+		responseStr = strconv.FormatInt(int64(response.(int)), 10)
+	case "uint":
+		responseStr = strconv.FormatInt(int64(response.(uint)), 10)
+	case "int64":
+		responseStr = strconv.FormatInt(int64(response.(int64)), 10)
 	}
 
 	return append([]byte(":"+responseStr), '\r', '\n')

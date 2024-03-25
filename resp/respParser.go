@@ -19,7 +19,7 @@ const (
 	REQUEST_NULL
 )
 
-func ResolveSimpleString(reader bufio.Reader) []Command {
+func resolveSimpleString(reader bufio.Reader) []Command {
 	simpleStringIdentifier, _ := reader.Peek(1)
 	hasIdentifierPrefix := simpleStringIdentifier[0] == byte('+')
 	if hasIdentifierPrefix {
@@ -40,7 +40,7 @@ func ResolveSimpleString(reader bufio.Reader) []Command {
 	return []Command{tokensToCommand(strings.Split(tokenString, " "))}
 }
 
-func ResolveArrayRequest(reader bufio.Reader) []Command {
+func resolveArrayRequest(reader bufio.Reader) []Command {
 	slog.Debug("Serve array request")
 
 	var commands []Command
@@ -65,8 +65,8 @@ func ResolveArrayRequest(reader bufio.Reader) []Command {
 			reader.ReadLine() // Token length is not needed
 			token, _ := reader.ReadString('\n')
 			token = strings.Trim(token, "\r\n")
-			slog.Debug(fmt.Sprintf("Token[%d]: %s\n", i, token))
 			tokens = append(tokens, token)
+			// slog.Debug(fmt.Sprintf("Token[%d]: %s\n", i, token))
 		}
 		commands = append(commands, tokensToCommand(tokens))
 		// slog.Debug(fmt.Sprintf("Command %v\n", commands[len(commands)-1]))
@@ -76,6 +76,6 @@ func ResolveArrayRequest(reader bufio.Reader) []Command {
 }
 
 var RespParsers = map[RequestType]func(reader bufio.Reader) []Command{
-	REQUEST_SIMPLE_STRING: ResolveSimpleString,
-	REQUEST_ARRAYS:        ResolveArrayRequest,
+	REQUEST_SIMPLE_STRING: resolveSimpleString,
+	REQUEST_ARRAYS:        resolveArrayRequest,
 }

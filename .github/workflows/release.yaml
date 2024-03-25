@@ -1,0 +1,86 @@
+name: Release CI
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  goreleaser:
+    permissions:
+      id-token: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      -
+        name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.22
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_BREW_TAP }}
+
+  # create_release:
+  #   name: Create Release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - name: Exit if tag not is not pointing to a commit in master branch
+  #     #   if: endsWith(github.ref, 'master') == false
+  #     #   run: exit -1
+  #     - name: Get release tag
+  #       id: tag
+  #       uses: dawidd6/action-get-tag@v1
+  #       with:
+  #         strip_v: false
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         tag_name: ${{steps.tag.outputs.tag}}
+  #         name: ${{steps.tag.outputs.tag}}
+  #         body_path: ./Release.md
+  #         draft: false
+  #         prerelease: false
+  #         generate_release_notes: false
+  # build:
+  #   needs: create_release
+  #   name: Build Release archives
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-latest, macos-latest, windows-latest, macos-14]
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: actions/setup-go@v4
+  #     - name: Build
+  #       run: |
+  #         cd server
+  #         go build -o redis-lite-server -v
+  #     - name: Verify binaries in build/
+  #       run: ls ./build
+  #     - name: Upload release assets
+  #       uses: softprops/action-gh-release@v1
+  #       with:
+  #         tag_name: ${{ github.ref_name }}
+  #         files: build/*
+
+          
+          

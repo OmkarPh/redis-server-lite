@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/OmkarPh/redis-lite/config"
-	"github.com/OmkarPh/redis-lite/engine"
 	"github.com/OmkarPh/redis-lite/resp"
+	"github.com/OmkarPh/redis-lite/store"
 )
 
 type ConfigAction struct{}
 
-func (action *ConfigAction) Execute(kvEngine *engine.KvEngine, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
+func (action *ConfigAction) Execute(kvStore *store.KvStore, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
 	if len(args) != 2 {
 		return [][]byte{resp.ResolveResponse("Not implemented", resp.Response_ERRORS)}, nil
 	}

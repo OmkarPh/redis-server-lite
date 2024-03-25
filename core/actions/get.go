@@ -4,29 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"math/rand"
-	"strconv"
 
 	"github.com/OmkarPh/redis-lite/config"
-	"github.com/OmkarPh/redis-lite/engine"
 	"github.com/OmkarPh/redis-lite/resp"
+	"github.com/OmkarPh/redis-lite/store"
+	"github.com/OmkarPh/redis-lite/utils"
 )
 
 type GetAction struct{}
 
-func (action *GetAction) Execute(kvEngine *engine.KvEngine, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
+func (action *GetAction) Execute(kvStore *store.KvStore, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
 	if len(args) != 1 {
-		errString := "ERR wrong number of arguments for 'get' command"
+		errString := "ERR wrong number of arguments for 'GET' command"
 		return [][]byte{resp.ResolveResponse(errString, resp.Response_ERRORS)}, errors.New(errString)
 	}
 
-	key := args[0]
-	if key == "key:__rand_int__" {
-		key = strconv.FormatInt(int64(rand.Uint64()), 10)
-	}
-
+	key := utils.ResolvePossibleKeyDirectives(args[0])
 	slog.Debug(fmt.Sprintf("Get action (%s)\n", key))
-	value, found := (*kvEngine).Get(key)
+
+	value, found := (*kvStore).Get(key)
 	if found {
 		return [][]byte{resp.ResolveResponse(value, resp.Response_BULK_STRINGS)}, nil
 	}
