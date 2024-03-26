@@ -26,7 +26,7 @@ brews:
   - tap:
       owner: OmkarPh
       name: homebrew-tap
-    name: redis-server-lite-test
+    name: redis-server-lite
     homepage: "https://github.com/OmkarPh/redis-server-lite"
     description: "A lightweight Redis server implementation in Go."
     folder: Formula

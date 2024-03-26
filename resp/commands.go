@@ -18,6 +18,7 @@ const (
 	ACTION_COMMAND ActionKey = "command"
 	ACTION_EXISTS  ActionKey = "exists"
 	ACTION_EXPIRE  ActionKey = "expire"
+	ACTION_PERSIST ActionKey = "persist"
 	ACTION_TTL     ActionKey = "ttl"
 )
 

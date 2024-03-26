@@ -46,6 +46,10 @@ func resolveArrayRequest(reader bufio.Reader) []Command {
 	var commands []Command
 
 	for {
+		// conn.SetReadDeadline(time.Now().Add(1 * time.Microsecond))
+		// if _, err := reader.Peek(1); err != nil {
+		// 	break
+		// }
 		arrayIdentifier, err := reader.ReadByte()
 		if err != nil {
 			slog.Debug(fmt.Sprintf("Errr reading arrayidentifier: %b\n", arrayIdentifier))

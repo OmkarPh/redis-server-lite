@@ -76,7 +76,7 @@ func (kvStore *ShardedKvStore) Del(key string) bool {
 	return existed
 }
 
-func (kvStore *ShardedKvStore) Expire(key string, seconds int64) (bool, error) {
+func (kvStore *ShardedKvStore) Expire(key string, seconds int64, options ExpireOptions) (bool, error) {
 	shardIdx := kvStore.resolveShardIdx(key)
 	kvStore.mutex[shardIdx].Lock()
 	defer kvStore.mutex[shardIdx].Unlock()
@@ -88,12 +88,43 @@ func (kvStore *ShardedKvStore) Expire(key string, seconds int64) (bool, error) {
 		return false, errors.New("ERR key doesn't exist")
 	}
 
+	if options.NX && !existingData.Expiry.IsZero() {
+		return false, nil
+	}
+	if options.XX && existingData.Expiry.IsZero() {
+		return false, nil
+	}
+	if options.LT && !existingData.Expiry.IsZero() && newExpiry.After(existingData.Expiry) {
+		return false, nil
+	}
+	if options.GT && !existingData.Expiry.IsZero() && newExpiry.Before(existingData.Expiry) {
+		return false, nil
+	}
+
 	kvStore.kv_stores[shardIdx][key] = StoredValue{
 		Value:  existingData.Value,
 		Expiry: newExpiry,
 	}
 
 	return true, nil
+}
+
+func (kvStore *ShardedKvStore) Persist(key string) bool {
+	shardIdx := kvStore.resolveShardIdx(key)
+	kvStore.mutex[shardIdx].Lock()
+	defer kvStore.mutex[shardIdx].Unlock()
+
+	existingData, exists := kvStore.kv_stores[shardIdx][key]
+	if !exists || existingData.Expiry.IsZero() {
+		return false
+	}
+
+	kvStore.kv_stores[shardIdx][key] = StoredValue{
+		Value:  existingData.Value,
+		Expiry: time.Time{},
+	}
+
+	return true
 }
 
 func (kvStore *ShardedKvStore) Ttl(key string) int {
@@ -115,7 +146,7 @@ func (kvStore *ShardedKvStore) Ttl(key string) int {
 		if data.Expiry.IsZero() {
 			return -1
 		}
-		return int(data.Expiry.Sub(time.Now()).Abs().Seconds())
+		return int(time.Until(data.Expiry).Seconds())
 	}
 	return -2
 }

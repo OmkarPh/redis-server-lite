@@ -13,7 +13,7 @@ import (
 type ExpireAction struct{}
 
 func (action *ExpireAction) Execute(kvStore *store.KvStore, redisConfig *config.RedisConfig, args ...string) ([][]byte, error) {
-	if len(args) < 2 || len(args) > 3 {
+	if len(args) < 2 {
 		errString := "ERR wrong number of arguments for 'EXPIRE' command"
 		return [][]byte{resp.ResolveResponse(errString, resp.Response_ERRORS)}, errors.New(errString)
 	}
@@ -31,7 +31,29 @@ func (action *ExpireAction) Execute(kvStore *store.KvStore, redisConfig *config.
 		return [][]byte{resp.ResolveResponse(errString, resp.Response_ERRORS)}, errors.New(errString)
 	}
 
-	success, _ := (*kvStore).Expire(key, seconds)
+	expireOptions := store.ExpireOptions{
+		NX: false,
+		XX: false,
+		GT: false,
+		LT: false,
+	}
+
+	if len(args) > 2 {
+		for _, option := range args[2:] {
+			switch option {
+			case "NX":
+				expireOptions.NX = true
+			case "XX":
+				expireOptions.XX = true
+			case "GT":
+				expireOptions.GT = true
+			case "LT":
+				expireOptions.LT = true
+			}
+		}
+	}
+
+	success, _ := (*kvStore).Expire(key, seconds, expireOptions)
 
 	if success {
 		return [][]byte{resp.ResolveResponse(1, resp.Response_INTEGERS)}, nil

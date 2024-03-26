@@ -55,7 +55,7 @@ func (kvStore *SimpleKvStore) Del(key string) bool {
 	return existed
 }
 
-func (kvStore *SimpleKvStore) Expire(key string, seconds int64) (bool, error) {
+func (kvStore *SimpleKvStore) Expire(key string, seconds int64, options ExpireOptions) (bool, error) {
 	kvStore.mutex.Lock()
 	defer kvStore.mutex.Unlock()
 
@@ -66,12 +66,42 @@ func (kvStore *SimpleKvStore) Expire(key string, seconds int64) (bool, error) {
 		return false, errors.New("ERR key doesn't exist")
 	}
 
+	if options.NX && !existingData.Expiry.IsZero() {
+		return false, nil
+	}
+	if options.XX && existingData.Expiry.IsZero() {
+		return false, nil
+	}
+	if options.LT && !existingData.Expiry.IsZero() && newExpiry.After(existingData.Expiry) {
+		return false, nil
+	}
+	if options.GT && !existingData.Expiry.IsZero() && newExpiry.Before(existingData.Expiry) {
+		return false, nil
+	}
+
 	kvStore.kv_store[key] = StoredValue{
 		Value:  existingData.Value,
 		Expiry: newExpiry,
 	}
 
 	return true, nil
+}
+
+func (kvStore *SimpleKvStore) Persist(key string) bool {
+	kvStore.mutex.Lock()
+	defer kvStore.mutex.Unlock()
+
+	existingData, exists := kvStore.kv_store[key]
+	if !exists {
+		return false
+	}
+
+	kvStore.kv_store[key] = StoredValue{
+		Value:  existingData.Value,
+		Expiry: time.Time{},
+	}
+
+	return true
 }
 
 func (kvStore *SimpleKvStore) Ttl(key string) int {

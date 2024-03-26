@@ -48,8 +48,18 @@ func HandleConnection(conn net.Conn, redisConfig *config.RedisConfig, kvStore *s
 
 		// Reader for progressive command parser
 		reader := bufio.NewReader(bytes.NewBuffer(messageBuffer[:]))
-
 		identifierBytes, _ := reader.Peek(1)
+
+		// reader := bufio.NewReaderSize(conn, 1024)
+		// conn.SetReadDeadline(time.Now().Add(1 * time.Microsecond))
+		// identifierBytes, err := reader.Peek(1)
+		// conn.SetReadDeadline(time.Time{})
+		// read if exists
+		// if err != nil || len(identifierBytes) == 0 {
+		// 	continue
+		// }
+		// fmt.Printf("can read something in handler --%s--\n", string(identifierBytes))
+
 		requestType := ResolveRequestType(identifierBytes[0])
 		slog.Debug(fmt.Sprint("Serve request", requestType))
 

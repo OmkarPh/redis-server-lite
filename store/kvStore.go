@@ -23,13 +23,20 @@ type StoredValue struct {
 	// Value interface{}
 	Expiry time.Time
 }
+type ExpireOptions struct {
+	NX bool
+	XX bool
+	GT bool
+	LT bool
+}
 type KvStore interface {
 	Get(key string) (string, bool)
 	Set(key string, value string)
 	Del(key string) bool
 	Incr(key string) (string, error)
 	Decr(key string) (string, error)
-	Expire(key string, seconds int64) (bool, error)
+	Expire(key string, seconds int64, options ExpireOptions) (bool, error)
+	Persist(key string) bool
 	Ttl(key string) int
 }
 

@@ -25,4 +25,5 @@ var RedisActions = map[resp.ActionKey]Action{
 	resp.ACTION_EXISTS:  &ExistsAction{},
 	resp.ACTION_TTL:     &TtlAction{},
 	resp.ACTION_EXPIRE:  &ExpireAction{},
+	resp.ACTION_PERSIST: &PersistAction{},
 }
