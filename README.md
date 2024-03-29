@@ -20,7 +20,7 @@ redis-server-lite
 
 # or
 
-# Using a release archive from https://github.com/OmkarPh/test-redis-server-lite/releases/latest
+# Using a release archive from https://github.com/OmkarPh/redis-server-lite/releases/latest
 cd ~/Downloads # Go to the Downloads folder of your machine
 mkdir redis-server-lite
 tar -xf "release_archive_file" -C redis-server-lite
