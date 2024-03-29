@@ -11,8 +11,8 @@ func GenerateRandomKey() string {
 }
 
 func ResolvePossibleKeyDirectives(key string) string {
-	key = strings.ToLower(key)
-	if key == "key:__rand_int__" || key == "__rand_int__" {
+	normalisedKey := strings.ToLower(key)
+	if normalisedKey == "key:__rand_int__" || normalisedKey == "__rand_int__" {
 		return GenerateRandomKey()
 	}
 	return key

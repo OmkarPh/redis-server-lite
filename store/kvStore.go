@@ -23,6 +23,18 @@ type StoredValue struct {
 	// Value interface{}
 	Expiry time.Time
 }
+type SetOptions struct {
+	NX                        bool
+	XX                        bool
+	GET                       bool
+	ExpireDuration            bool // EX or PX specified
+	ExpiryTimeSeconds         int64
+	ExpiryTimeMiliSeconds     int64
+	ExpireTimestamp           bool // EXAT or PXAT specified
+	ExpiryUnixTimeSeconds     int64
+	ExpiryUnixTimeMiliSeconds int64
+	KEEPTTL                   bool
+}
 type ExpireOptions struct {
 	NX bool
 	XX bool
@@ -31,7 +43,7 @@ type ExpireOptions struct {
 }
 type KvStore interface {
 	Get(key string) (string, bool)
-	Set(key string, value string)
+	Set(key string, value string, options SetOptions) (bool, string, error)
 	Del(key string) bool
 	DeleteIfExpired(keysCount int) int
 	Incr(key string) (string, error)

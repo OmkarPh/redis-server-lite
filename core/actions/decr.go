@@ -28,6 +28,6 @@ func (action *DecrAction) Execute(kvStore *store.KvStore, redisConfig *config.Re
 		return [][]byte{resp.ResolveResponse(errString, resp.Response_ERRORS)}, errors.New(errString)
 	}
 
-	(*kvStore).Set(key, newValueString)
+	(*kvStore).Set(key, newValueString, store.SetOptions{})
 	return [][]byte{resp.ResolveResponse(newValueString, resp.Response_INTEGERS)}, nil
 }

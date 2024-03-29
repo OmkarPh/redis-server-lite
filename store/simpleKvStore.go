@@ -38,13 +38,40 @@ func (kvStore *SimpleKvStore) Get(key string) (string, bool) {
 	return "", false
 }
 
-func (kvStore *SimpleKvStore) Set(key string, value string) {
+func (kvStore *SimpleKvStore) Set(key string, value string, options SetOptions) (bool, string, error) {
 	kvStore.mutex.Lock()
 	defer kvStore.mutex.Unlock()
+
+	existingData, exists := kvStore.kv_store[key]
+
+	// Convert options to ExpirationTimeOptions
+	expirationOptions := utils.ExpirationTimeOptions{
+		NX:                        options.NX,
+		XX:                        options.XX,
+		ExpireDuration:            options.ExpireDuration,
+		ExpiryTimeSeconds:         options.ExpiryTimeSeconds,
+		ExpiryTimeMiliSeconds:     options.ExpiryTimeMiliSeconds,
+		ExpireTimestamp:           options.ExpireTimestamp,
+		ExpiryUnixTimeSeconds:     options.ExpiryUnixTimeSeconds,
+		ExpiryUnixTimeMiliSeconds: options.ExpiryUnixTimeMiliSeconds,
+		KEEPTTL:                   options.KEEPTTL,
+	}
+
+	if (options.NX && exists) || (options.XX && !exists) {
+		return false, "", nil
+	}
+
+	expiryTime, canSet, err := utils.ResolveExpirationTime(expirationOptions, exists, existingData.Expiry)
+
+	if !canSet {
+		return false, "", err
+	}
+
 	kvStore.kv_store[key] = StoredValue{
 		Value:  value,
-		Expiry: time.Time{},
+		Expiry: expiryTime,
 	}
+	return true, existingData.Value, nil
 }
 
 func (kvStore *SimpleKvStore) Del(key string) bool {

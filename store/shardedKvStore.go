@@ -43,7 +43,13 @@ func (kvStore *ShardedKvStore) resolveShardIdx(key string) uint32 {
 
 	h := murmur3.New32()
 	h.Write([]byte(key))
-	shardIdx := h.Sum32() % kvStore.shardFactor
+
+	var shardIdx uint32
+	if kvStore.shardFactor&(kvStore.shardFactor-1) == 0 {
+		shardIdx = h.Sum32() & (kvStore.shardFactor - 1) // Faster than modulus (when shardfactor is power of 2)
+	} else {
+		shardIdx = h.Sum32() % kvStore.shardFactor
+	}
 
 	slog.Debug(fmt.Sprintf("Shard idx for %s => %d", key, shardIdx))
 	// shardIdxCache[key] = shardIdx
@@ -64,14 +70,41 @@ func (kvStore *ShardedKvStore) Get(key string) (string, bool) {
 	return "", false
 }
 
-func (kvStore *ShardedKvStore) Set(key string, value string) {
+func (kvStore *ShardedKvStore) Set(key string, value string, options SetOptions) (bool, string, error) {
 	shardIdx := kvStore.resolveShardIdx(key)
 	kvStore.mutex[shardIdx].Lock()
 	defer kvStore.mutex[shardIdx].Unlock()
+
+	existingData, exists := kvStore.kv_stores[shardIdx][key]
+
+	// Convert options to ExpirationTimeOptions
+	expirationOptions := utils.ExpirationTimeOptions{
+		NX:                        options.NX,
+		XX:                        options.XX,
+		ExpireDuration:            options.ExpireDuration,
+		ExpiryTimeSeconds:         options.ExpiryTimeSeconds,
+		ExpiryTimeMiliSeconds:     options.ExpiryTimeMiliSeconds,
+		ExpireTimestamp:           options.ExpireTimestamp,
+		ExpiryUnixTimeSeconds:     options.ExpiryUnixTimeSeconds,
+		ExpiryUnixTimeMiliSeconds: options.ExpiryUnixTimeMiliSeconds,
+		KEEPTTL:                   options.KEEPTTL,
+	}
+
+	if (options.NX && exists) || (options.XX && !exists) {
+		return false, "", nil
+	}
+
+	expiryTime, canSet, err := utils.ResolveExpirationTime(expirationOptions, exists, existingData.Expiry)
+
+	if !canSet {
+		return false, "", err
+	}
+
 	kvStore.kv_stores[shardIdx][key] = StoredValue{
 		Value:  value,
-		Expiry: time.Time{},
+		Expiry: expiryTime,
 	}
+	return true, existingData.Value, nil
 }
 
 func (kvStore *ShardedKvStore) Del(key string) bool {

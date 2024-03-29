@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"os"
 
 	"github.com/OmkarPh/redis-lite/config"
 	"github.com/OmkarPh/redis-lite/core"
@@ -11,6 +12,12 @@ import (
 )
 
 func main() {
+
+	fmt.Println("Redis-lite server v0.2")
+	fmt.Println("Port:", config.PORT, ", PID:", os.Getpid())
+	fmt.Println("Visit - https://github.com/OmkarPh/redis-server-lite")
+	fmt.Println()
+
 	slog.SetLogLoggerLevel(config.DefaultLoggerLevel)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", config.PORT))
@@ -23,10 +30,9 @@ func main() {
 	redisConfig := config.NewRedisConfig()
 	kvStore := store.NewKvStore(redisConfig)
 
-	fmt.Println("Redis-lite server is up & running on port", config.PORT)
-	fmt.Println()
-
 	go core.CleanExpiredKeys(kvStore)
+
+	fmt.Println()
 
 	for {
 		conn, err := listener.Accept()

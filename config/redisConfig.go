@@ -88,7 +88,7 @@ func (rc *RedisConfig) SetDefaultConfig() {
 	rc.Params["save"] = "3600 1 300 100 60 10000"
 	rc.Params["appendonly"] = "no"
 	rc.Params["kv_store"] = "sharded" // Options - "simple", "sharded"
-	rc.Params["shardfactor"] = "10"
+	rc.Params["shardfactor"] = "32"
 }
 
 func (rc *RedisConfig) GetParam(key string) (string, bool) {
