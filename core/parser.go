@@ -25,7 +25,7 @@ func ResolveRequestType(identifier byte) resp.RequestType {
 }
 
 func ResolveCommands(reader bufio.Reader, requestType resp.RequestType) []resp.Command {
-	slog.Debug(fmt.Sprint("Serve request", requestType))
+	slog.Debug(fmt.Sprint("Serve request =>", requestType))
 	parser, parserImplemented := resp.RespParsers[requestType]
 	if !parserImplemented {
 		errString := "Request type not implemented"

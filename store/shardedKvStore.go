@@ -9,37 +9,44 @@ import (
 	"time"
 
 	"github.com/OmkarPh/redis-lite/utils"
-	"github.com/cespare/xxhash/v2"
+	"github.com/spaolacci/murmur3"
 )
 
 type ShardedKvStore struct {
-	shardFactor uint64
+	shardFactor uint32
 	mutex       []sync.RWMutex
 	kv_stores   []map[string]StoredValue
 }
 
-func NewShardedKvStore(shardFactor int) *ShardedKvStore {
+func NewShardedKvStore(shardFactor uint32) *ShardedKvStore {
 	newKvStore := &ShardedKvStore{
-		shardFactor: uint64(shardFactor),
+		shardFactor: shardFactor,
 		mutex:       make([]sync.RWMutex, shardFactor),
 		kv_stores:   make([]map[string]StoredValue, shardFactor),
 	}
-	for i := 0; i < shardFactor; i++ {
+	for i := uint32(0); i < shardFactor; i++ {
 		newKvStore.kv_stores[i] = make(map[string]StoredValue)
 	}
+	fmt.Printf("%d Shards created\n", shardFactor)
 	return newKvStore
 }
 
 // var shardIdxCache map[string]uint64 = make(map[string]uint64)
-func (kvStore *ShardedKvStore) resolveShardIdx(key string) uint64 {
+func (kvStore *ShardedKvStore) resolveShardIdx(key string) uint32 {
 	// if shardIdx, ok := shardIdxCache[key]; ok {
 	// 	return shardIdx
 	// }
-	hasher := xxhash.New()
-	hasher.Write([]byte(key))
-	shardIdx := hasher.Sum64() % kvStore.shardFactor
-	// shardIdxCache[key] = shardIdx
+
+	// hasher := xxhash.New()
+	// hasher.Write([]byte(key))
+	// shardIdx := uint32(hasher.Sum64() % uint64(kvStore.shardFactor))
+
+	h := murmur3.New32()
+	h.Write([]byte(key))
+	shardIdx := h.Sum32() % kvStore.shardFactor
+
 	slog.Debug(fmt.Sprintf("Shard idx for %s => %d", key, shardIdx))
+	// shardIdxCache[key] = shardIdx
 	return shardIdx
 }
 
@@ -74,6 +81,23 @@ func (kvStore *ShardedKvStore) Del(key string) bool {
 	_, existed := kvStore.kv_stores[shardIdx][key]
 	delete(kvStore.kv_stores[shardIdx], key)
 	return existed
+}
+
+func (kvStore *ShardedKvStore) DeleteIfExpired(keysCount int) int {
+	removedKeys := 0
+	for shardIdx := uint32(0); shardIdx < kvStore.shardFactor; shardIdx++ {
+		kvStore.mutex[shardIdx].Lock()
+		for key, data := range kvStore.kv_stores[shardIdx] {
+			if utils.IsExpired(data.Expiry) {
+				// slog.Debug(fmt.Sprintf("Deleting expired key %s", key))
+				delete(kvStore.kv_stores[shardIdx], key)
+				removedKeys++
+			}
+		}
+
+		kvStore.mutex[shardIdx].Unlock()
+	}
+	return removedKeys
 }
 
 func (kvStore *ShardedKvStore) Expire(key string, seconds int64, options ExpireOptions) (bool, error) {

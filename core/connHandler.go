@@ -43,8 +43,7 @@ func HandleConnection(conn net.Conn, redisConfig *config.RedisConfig, kvStore *s
 			break
 		}
 
-		received_msg_str := strings.Trim(string(messageBuffer), "\r\n")
-		slog.Debug(fmt.Sprintf("Received (%d): %s", len(received_msg_str), received_msg_str))
+		slog.Debug(fmt.Sprintf("Received (%d): %s", len(strings.Trim(string(messageBuffer), "\r\n")), strings.Trim(string(messageBuffer), "\r\n")))
 
 		// Reader for progressive command parser
 		reader := bufio.NewReader(bytes.NewBuffer(messageBuffer[:]))
@@ -61,7 +60,6 @@ func HandleConnection(conn net.Conn, redisConfig *config.RedisConfig, kvStore *s
 		// fmt.Printf("can read something in handler --%s--\n", string(identifierBytes))
 
 		requestType := ResolveRequestType(identifierBytes[0])
-		slog.Debug(fmt.Sprint("Serve request", requestType))
 
 		commands := ResolveCommands(*reader, requestType)
 

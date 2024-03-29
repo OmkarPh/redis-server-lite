@@ -26,6 +26,8 @@ func main() {
 	fmt.Println("Redis-lite server is up & running on port", config.PORT)
 	fmt.Println()
 
+	go core.CleanExpiredKeys(kvStore)
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

@@ -33,6 +33,7 @@ type KvStore interface {
 	Get(key string) (string, bool)
 	Set(key string, value string)
 	Del(key string) bool
+	DeleteIfExpired(keysCount int) int
 	Incr(key string) (string, error)
 	Decr(key string) (string, error)
 	Expire(key string, seconds int64, options ExpireOptions) (bool, error)
@@ -50,12 +51,12 @@ var StoreGenerators = map[StoreType]func(rc *config.RedisConfig) *KvStore{
 		shardFactor := 10 // Default
 		if found {
 			var err error
-			shardFactor, err = strconv.Atoi(shardFactorStr)
+			shardFactor, err = strconv.Atoi((shardFactorStr))
 			if err != nil {
 				shardFactor = 10 // Default
 			}
 		}
-		var newKvStore KvStore = NewShardedKvStore(shardFactor)
+		var newKvStore KvStore = NewShardedKvStore(uint32(shardFactor))
 		return &newKvStore
 	},
 }

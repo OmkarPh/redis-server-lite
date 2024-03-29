@@ -55,6 +55,20 @@ func (kvStore *SimpleKvStore) Del(key string) bool {
 	return existed
 }
 
+func (kvStore *SimpleKvStore) DeleteIfExpired(keysCount int) int {
+	removedKeys := 0
+	kvStore.mutex.Lock()
+	defer kvStore.mutex.Unlock()
+	for key, data := range kvStore.kv_store {
+		if utils.IsExpired(data.Expiry) {
+			// slog.Debug(fmt.Sprintf("Deleting expired key %s", key))
+			delete(kvStore.kv_store, key)
+			removedKeys++
+		}
+	}
+	return removedKeys
+}
+
 func (kvStore *SimpleKvStore) Expire(key string, seconds int64, options ExpireOptions) (bool, error) {
 	kvStore.mutex.Lock()
 	defer kvStore.mutex.Unlock()
